@@ -15,6 +15,7 @@
 		CDCF28AE1D22036D0068FDFA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDCF28AC1D22036D0068FDFA /* Main.storyboard */; };
 		CDCF28B01D22036D0068FDFA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CDCF28AF1D22036D0068FDFA /* Assets.xcassets */; };
 		CDCF28B31D22036D0068FDFA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDCF28B11D22036D0068FDFA /* LaunchScreen.storyboard */; };
+		CDF2F3541D22CD96003BB5F2 /* AIStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF2F3531D22CD96003BB5F2 /* AIStrategy.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		CDCF28AF1D22036D0068FDFA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CDCF28B21D22036D0068FDFA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		CDCF28B41D22036D0068FDFA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CDF2F3531D22CD96003BB5F2 /* AIStrategy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AIStrategy.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +67,7 @@
 				CDCF28A61D22036D0068FDFA /* GameScene.sks */,
 				CDCF28A81D22036D0068FDFA /* GameScene.swift */,
 				CDCF28AA1D22036D0068FDFA /* GameViewController.swift */,
+				CDF2F3531D22CD96003BB5F2 /* AIStrategy.swift */,
 				CDCF28AC1D22036D0068FDFA /* Main.storyboard */,
 				CDCF28AF1D22036D0068FDFA /* Assets.xcassets */,
 				CDCF28B11D22036D0068FDFA /* LaunchScreen.storyboard */,
@@ -146,6 +149,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CDF2F3541D22CD96003BB5F2 /* AIStrategy.swift in Sources */,
 				CDCF28A91D22036D0068FDFA /* GameScene.swift in Sources */,
 				CDCF28AB1D22036D0068FDFA /* GameViewController.swift in Sources */,
 				CDCF28A51D22036D0068FDFA /* AppDelegate.swift in Sources */,
