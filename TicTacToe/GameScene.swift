@@ -9,7 +9,7 @@
 import SpriteKit
 import GameplayKit
 
-enum Cell: Int{
+enum PlayerType: Int{
     case X
     case O
     case None
@@ -21,8 +21,8 @@ enum GameState: Int{
     case Playing
 }
 
-struct GridCoordinate{
-    var value: Cell
+struct BoardCell{
+    var value: PlayerType
     var node: String
 }
 
@@ -78,12 +78,12 @@ class GameScene: SKScene {
             }
             
             for i in 0...8{
-                guard let cellNode: SKSpriteNode = self.childNodeWithName(gameBoard.board[i].node) as? SKSpriteNode else{
+                guard let cellNode: SKSpriteNode = self.childNodeWithName(gameBoard.getElementAtBoardLocation(i).node) as? SKSpriteNode else{
                     return
                 }
                 if selectedNode.name == cellNode.name{
                     cellNode.addChild(node)
-                    gameBoard.board[i].value = gameBoard.isPlayerOne() ? .X : .O
+                    gameBoard.addPlayerValueAtBoardLocation(i, value: gameBoard.isPlayerOne() ? .X : .O)
                     gameBoard.togglePlayer()
                 }
             }
@@ -100,7 +100,7 @@ class GameScene: SKScene {
     func updateGameState(){
        let (state, winner) = gameBoard.determineIfWinner()
         if state == .Winner{
-            let winningPlayer = winner!.playerId == gameBoard._players[0].playerId ? "1" : "2"
+            let winningPlayer = gameBoard.isPlayerOne(winner!) ? "1" : "2"
             if let winningLabel = winningLabel as? SKLabelNode,
                 let player1_score = self.childNodeWithName("//player1_score") as? SKLabelNode,
                 let player2_score = self.childNodeWithName("//player2_score") as? SKLabelNode{
@@ -114,7 +114,7 @@ class GameScene: SKScene {
                     player2_score.text = "\(Int(player2_score.text!)! + 1)"
                 }
                 resetNode.hidden = false
-                gameBoard.currentPlayer = gameBoard._players[0]
+                gameBoard.makePlayerOneActive()
             }
         }
         else if state == .Draw{
@@ -122,36 +122,36 @@ class GameScene: SKScene {
                 winningLabel.text = "It's a draw"
                 winningLabel.hidden = false
                 resetNode.hidden = false
-                gameBoard.currentPlayer = gameBoard._players[0]
+                gameBoard.makePlayerOneActive()
             }
             
         }
         else{
             winningLabel.hidden = true
             
-            if gameBoard.activePlayer!.playerId == gameBoard._players[1].playerId{
+            if gameBoard.isPlayerTwoTurn(){
                 //AI moves
                 
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
                     self.ai.gameModel = self.gameBoard
-                    let move = self.ai.bestMoveForPlayer(self.gameBoard.currentPlayer!) as! Move?
+                    let move = self.ai.bestMoveForPlayer(self.gameBoard.activePlayer!) as! Move?
                     
                     assert(move != nil, "AI should be able to find a move")
                     
                     let strategistTime = CFAbsoluteTimeGetCurrent()
                     let delta = CFAbsoluteTimeGetCurrent() - strategistTime
-                    let  aiTimeCeiling: NSTimeInterval = 2.0
+                    let  aiTimeCeiling: NSTimeInterval = 1.0
                         
                     let delay = min(aiTimeCeiling - delta, aiTimeCeiling)
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(delay) * Int64(NSEC_PER_SEC)), dispatch_get_main_queue()) {
                             
-                        guard let cellNode: SKSpriteNode = self.childNodeWithName(self.gameBoard.board[move!.cell].node) as? SKSpriteNode else{
+                        guard let cellNode: SKSpriteNode = self.childNodeWithName(self.gameBoard.getElementAtBoardLocation(move!.cell).node) as? SKSpriteNode else{
                                 return
                         }
                         let circle = SKSpriteNode(imageNamed: "O_symbol")
                         circle.size = CGSize(width: 75, height: 75)
                         cellNode.addChild(circle)
-                        self.gameBoard.board[move!.cell].value = .O
+                        self.gameBoard.addPlayerValueAtBoardLocation(move!.cell, value: .O)
                         self.gameBoard.togglePlayer()
                         self.updateGameState()
                     }
@@ -162,15 +162,15 @@ class GameScene: SKScene {
     }
     
     func resetGame(){
-        let top_left: GridCoordinate  = GridCoordinate(value: .None, node: "//*top_left")
-        let top_middle: GridCoordinate = GridCoordinate(value: .None, node: "//*top_middle")
-        let top_right: GridCoordinate = GridCoordinate(value: .None, node: "//*top_right")
-        let middle_left: GridCoordinate = GridCoordinate(value: .None, node: "//*middle_left")
-        let center: GridCoordinate = GridCoordinate(value: .None, node: "//*center")
-        let middle_right: GridCoordinate = GridCoordinate(value: .None, node: "//*middle_right")
-        let bottom_left: GridCoordinate = GridCoordinate(value: .None, node: "//*bottom_left")
-        let bottom_middle: GridCoordinate = GridCoordinate(value: .None, node: "//*bottom_middle")
-        let bottom_right: GridCoordinate = GridCoordinate(value: .None, node: "//*bottom_right")
+        let top_left: BoardCell  = BoardCell(value: .None, node: "//*top_left")
+        let top_middle: BoardCell = BoardCell(value: .None, node: "//*top_middle")
+        let top_right: BoardCell = BoardCell(value: .None, node: "//*top_right")
+        let middle_left: BoardCell = BoardCell(value: .None, node: "//*middle_left")
+        let center: BoardCell = BoardCell(value: .None, node: "//*center")
+        let middle_right: BoardCell = BoardCell(value: .None, node: "//*middle_right")
+        let bottom_left: BoardCell = BoardCell(value: .None, node: "//*bottom_left")
+        let bottom_middle: BoardCell = BoardCell(value: .None, node: "//*bottom_middle")
+        let bottom_right: BoardCell = BoardCell(value: .None, node: "//*bottom_right")
         
         boardNode = self.childNodeWithName("//Grid") as? SKSpriteNode
         
@@ -183,8 +183,7 @@ class GameScene: SKScene {
         
         let board = [top_left, top_middle, top_right, middle_left, center, middle_right, bottom_left, bottom_middle, bottom_right]
         
-        gameBoard = Board()
-        gameBoard.board = board
+        gameBoard = Board(gameboard: board)
         
         self.enumerateChildNodesWithName("//grid*") { (node, stop) in
             if let node = node as? SKSpriteNode{

@@ -36,17 +36,58 @@ class Move: NSObject, GKGameModelUpdate{
 
 @objc(Board)
 class Board: NSObject, NSCopying, GKGameModel{
-    let _players: [GKGameModelPlayer] = [Player(player: 0), Player(player: 1)]
-    var currentPlayer: GKGameModelPlayer?
-    var board: [GridCoordinate]
+    private let _players: [GKGameModelPlayer] = [Player(player: 0), Player(player: 1)]
+    private var currentPlayer: GKGameModelPlayer?
+    private var board: [BoardCell]
     
     func isPlayerOne()->Bool{
         return currentPlayer?.playerId == _players[0].playerId
     }
     
+    func playerOne()->GKGameModelPlayer{
+        return _players[0]
+    }
+    
+    func playerTwo()->GKGameModelPlayer{
+        return _players[1]
+    }
+    
+    func setActivePlayer(player: GKGameModelPlayer){
+        currentPlayer = player
+    }
+    
+    func isPlayerOneTurn()->Bool{
+        return isPlayerOne(activePlayer!)
+    }
+    
+    func isPlayerTwoTurn()->Bool{
+        return !isPlayerOneTurn()
+    }
+    
+    func makePlayerOneActive(){
+        currentPlayer = _players[0]
+    }
+    
+    func makePlayerTwoActive(){
+        currentPlayer = _players[1]
+    }
+    
+    func getElementAtBoardLocation(index:Int)->BoardCell{
+        assert(index < board.count, "Location on board must be less than total elements in array")
+        return board[index]
+    }
+    
+    func addPlayerValueAtBoardLocation(index: Int, value: PlayerType){
+        assert(index < board.count, "Location on board must be less than total elements in array")
+        board[index].value = value
+    }
+    
+    func isPlayerOne(player: GKGameModelPlayer)->Bool{
+        return player.playerId == _players[0].playerId
+    }
+    
     
     @objc func copyWithZone(zone: NSZone) -> AnyObject{
-//        return self.dynamicType.init(self)
         let copy = Board()
         copy.setGameModel(self)
         return copy
@@ -55,6 +96,12 @@ class Board: NSObject, NSCopying, GKGameModel{
     required override init() {
         self.currentPlayer = _players[0]
         self.board = []
+        super.init()
+    }
+    
+    init(gameboard: [BoardCell]){
+        self.currentPlayer = _players[0]
+        self.board = gameboard
         super.init()
     }
     
@@ -101,7 +148,7 @@ class Board: NSObject, NSCopying, GKGameModel{
     
     }
 
-    func getPlayerAtGridCoordinate(gridCoord: GridCoordinate)->GKGameModelPlayer?{
+    func getPlayerAtBoardCell(gridCoord: BoardCell)->GKGameModelPlayer?{
         return gridCoord.value == .X ? self.players?.first: self.players?.last
     }
     
@@ -130,48 +177,48 @@ class Board: NSObject, NSCopying, GKGameModel{
     func determineIfWinner()->(GameState, GKGameModelPlayer?){
         // check rows for a winner
         if board[0].value != .None && (board[0].value == board[1].value && board[0].value == board[2].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtGridCoordinate(board[0]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[0]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[3].value != .None && (board[3].value == board[4].value && board[3].value == board[5].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtGridCoordinate(board[3]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[3]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[6].value != .None && (board[6].value == board[7].value && board[6].value == board[8].value) {
-            guard let winner: GKGameModelPlayer = getPlayerAtGridCoordinate(board[6]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[6]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         // check columns for a winner
         if board[0].value != .None && (board[0].value == board[3].value && board[3].value == board[6].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtGridCoordinate(board[0]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[0]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[1].value != .None && (board[1].value == board[4].value && board[4].value == board[7].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtGridCoordinate(board[1]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[1]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[2].value != .None && (board[2].value == board[5].value && board[5].value == board[8].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtGridCoordinate(board[2]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[2]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         // check diagonals for a winner
         if board[0].value != .None && (board[0].value == board[4].value && board[4].value == board[8].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtGridCoordinate(board[0]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[0]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[2].value != .None && (board[2].value == board[4].value && board[4].value == board[6].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtGridCoordinate(board[2]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[2]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
-        let foundEmptyCells: [GridCoordinate] = board.filter{ (gridCoord) -> Bool in
+        let foundEmptyCells: [BoardCell] = board.filter{ (gridCoord) -> Bool in
             return gridCoord.value == .None
         }
         
