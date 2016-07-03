@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CD7B25751D220AC50010B5C2 /* tictactoe.atlas in Resources */ = {isa = PBXBuildFile; fileRef = CD7B25741D220AC50010B5C2 /* tictactoe.atlas */; };
+		CD086F0F1D29753B00E4B803 /* GameStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD086F0E1D29753B00E4B803 /* GameStateMachine.swift */; };
 		CDCF28A51D22036D0068FDFA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDCF28A41D22036D0068FDFA /* AppDelegate.swift */; };
 		CDCF28A71D22036D0068FDFA /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = CDCF28A61D22036D0068FDFA /* GameScene.sks */; };
 		CDCF28A91D22036D0068FDFA /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDCF28A81D22036D0068FDFA /* GameScene.swift */; };
@@ -19,7 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		CD7B25741D220AC50010B5C2 /* tictactoe.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = tictactoe.atlas; sourceTree = "<group>"; };
+		CD086F0E1D29753B00E4B803 /* GameStateMachine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameStateMachine.swift; sourceTree = "<group>"; };
 		CDCF28A11D22036D0068FDFA /* TicTacToe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TicTacToe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDCF28A41D22036D0068FDFA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CDCF28A61D22036D0068FDFA /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
@@ -47,7 +47,6 @@
 			isa = PBXGroup;
 			children = (
 				CDCF28A31D22036D0068FDFA /* TicTacToe */,
-				CDCF28A21D22036D0068FDFA /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -57,17 +56,19 @@
 				CDCF28A11D22036D0068FDFA /* TicTacToe.app */,
 			);
 			name = Products;
+			path = ..;
 			sourceTree = "<group>";
 		};
 		CDCF28A31D22036D0068FDFA /* TicTacToe */ = {
 			isa = PBXGroup;
 			children = (
-				CD7B25741D220AC50010B5C2 /* tictactoe.atlas */,
 				CDCF28A41D22036D0068FDFA /* AppDelegate.swift */,
 				CDCF28A61D22036D0068FDFA /* GameScene.sks */,
 				CDCF28A81D22036D0068FDFA /* GameScene.swift */,
 				CDCF28AA1D22036D0068FDFA /* GameViewController.swift */,
 				CDF2F3531D22CD96003BB5F2 /* AIStrategy.swift */,
+				CD086F0E1D29753B00E4B803 /* GameStateMachine.swift */,
+				CDCF28A21D22036D0068FDFA /* Products */,
 				CDCF28AC1D22036D0068FDFA /* Main.storyboard */,
 				CDCF28AF1D22036D0068FDFA /* Assets.xcassets */,
 				CDCF28B11D22036D0068FDFA /* LaunchScreen.storyboard */,
@@ -136,7 +137,6 @@
 			files = (
 				CDCF28A71D22036D0068FDFA /* GameScene.sks in Resources */,
 				CDCF28B31D22036D0068FDFA /* LaunchScreen.storyboard in Resources */,
-				CD7B25751D220AC50010B5C2 /* tictactoe.atlas in Resources */,
 				CDCF28B01D22036D0068FDFA /* Assets.xcassets in Resources */,
 				CDCF28AE1D22036D0068FDFA /* Main.storyboard in Resources */,
 			);
@@ -150,6 +150,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CDF2F3541D22CD96003BB5F2 /* AIStrategy.swift in Sources */,
+				CD086F0F1D29753B00E4B803 /* GameStateMachine.swift in Sources */,
 				CDCF28A91D22036D0068FDFA /* GameScene.swift in Sources */,
 				CDCF28AB1D22036D0068FDFA /* GameViewController.swift in Sources */,
 				CDCF28A51D22036D0068FDFA /* AppDelegate.swift in Sources */,

@@ -9,50 +9,47 @@
 import SpriteKit
 import GameplayKit
 
-enum PlayerType: Int{
-    case X
-    case O
-    case None
-}
-
-enum GameState: Int{
-    case Winner
-    case Draw
-    case Playing
-}
-
-struct BoardCell{
-    var value: PlayerType
-    var node: String
-}
-
 class GameScene: SKScene {
-    var winningLabel: SKNode!
-    var resetNode: SKNode!
-    var boardNode: SKNode!
     var gameBoard: Board!
+    var stateMachine: GKStateMachine!
     var ai: GKMinmaxStrategist!
     
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
-        ai = GKMinmaxStrategist()
-        ai.maxLookAheadDepth = 8
-        ai.randomSource = GKARC4RandomSource()
         self.enumerateChildNodesWithName("//grid*") { (node, stop) in
             if let node = node as? SKSpriteNode{
                 node.color = UIColor.clearColor()
             }
         }
         
-        resetGame()
+        let top_left: BoardCell  = BoardCell(value: .None, node: "//*top_left")
+        let top_middle: BoardCell = BoardCell(value: .None, node: "//*top_middle")
+        let top_right: BoardCell = BoardCell(value: .None, node: "//*top_right")
+        let middle_left: BoardCell = BoardCell(value: .None, node: "//*middle_left")
+        let center: BoardCell = BoardCell(value: .None, node: "//*center")
+        let middle_right: BoardCell = BoardCell(value: .None, node: "//*middle_right")
+        let bottom_left: BoardCell = BoardCell(value: .None, node: "//*bottom_left")
+        let bottom_middle: BoardCell = BoardCell(value: .None, node: "//*bottom_middle")
+        let bottom_right: BoardCell = BoardCell(value: .None, node: "//*bottom_right")
+        
+        let board = [top_left, top_middle, top_right, middle_left, center, middle_right, bottom_left, bottom_middle, bottom_right]
+        
+        gameBoard = Board(gameboard: board)
+        
+        ai = GKMinmaxStrategist()
+        ai.maxLookAheadDepth = 9
+        ai.randomSource = GKARC4RandomSource()
+        
+        let beginGameState = StartGameState(scene: self)
+        let activeGameState = ActiveGameState(scene: self)
+        let endGameState = EndGameState(scene: self)
+        
+        stateMachine = GKStateMachine(states: [beginGameState, activeGameState, endGameState])
+        stateMachine.enterState(StartGameState.self)
+        
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-       /* Called when a touch begins */
-        if !gameBoard.isPlayerOne(){
-            return
-        }
-        
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {        
         for touch in touches {
             let location = touch.locationInNode(self)
             let selectedNode = self.nodeAtPoint(location)
@@ -60,7 +57,7 @@ class GameScene: SKScene {
             
             if let name = selectedNode.name {
                 if name == "Reset" || name == "reset_label"{
-                    resetGame()
+                    self.stateMachine.enterState(StartGameState.self)
                     return
                 }
             }
@@ -87,108 +84,11 @@ class GameScene: SKScene {
                     gameBoard.togglePlayer()
                 }
             }
-            
-            updateGameState()
         }
     }
    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
-        
-    }
-    
-    func updateGameState(){
-       let (state, winner) = gameBoard.determineIfWinner()
-        if state == .Winner{
-            let winningPlayer = gameBoard.isPlayerOne(winner!) ? "1" : "2"
-            if let winningLabel = winningLabel as? SKLabelNode,
-                let player1_score = self.childNodeWithName("//player1_score") as? SKLabelNode,
-                let player2_score = self.childNodeWithName("//player2_score") as? SKLabelNode{
-                winningLabel.text = "Player \(winningPlayer) wins!"
-                winningLabel.hidden = false
-                
-                if winningPlayer == "1"{
-                    player1_score.text = "\(Int(player1_score.text!)! + 1)"
-                }
-                else{
-                    player2_score.text = "\(Int(player2_score.text!)! + 1)"
-                }
-                resetNode.hidden = false
-                gameBoard.makePlayerOneActive()
-            }
-        }
-        else if state == .Draw{
-            if let winningLabel = winningLabel as? SKLabelNode{
-                winningLabel.text = "It's a draw"
-                winningLabel.hidden = false
-                resetNode.hidden = false
-                gameBoard.makePlayerOneActive()
-            }
-            
-        }
-        else{
-            winningLabel.hidden = true
-            
-            if gameBoard.isPlayerTwoTurn(){
-                //AI moves
-                
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
-                    self.ai.gameModel = self.gameBoard
-                    let move = self.ai.bestMoveForPlayer(self.gameBoard.activePlayer!) as! Move?
-                    
-                    assert(move != nil, "AI should be able to find a move")
-                    
-                    let strategistTime = CFAbsoluteTimeGetCurrent()
-                    let delta = CFAbsoluteTimeGetCurrent() - strategistTime
-                    let  aiTimeCeiling: NSTimeInterval = 1.0
-                        
-                    let delay = min(aiTimeCeiling - delta, aiTimeCeiling)
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(delay) * Int64(NSEC_PER_SEC)), dispatch_get_main_queue()) {
-                            
-                        guard let cellNode: SKSpriteNode = self.childNodeWithName(self.gameBoard.getElementAtBoardLocation(move!.cell).node) as? SKSpriteNode else{
-                                return
-                        }
-                        let circle = SKSpriteNode(imageNamed: "O_symbol")
-                        circle.size = CGSize(width: 75, height: 75)
-                        cellNode.addChild(circle)
-                        self.gameBoard.addPlayerValueAtBoardLocation(move!.cell, value: .O)
-                        self.gameBoard.togglePlayer()
-                        self.updateGameState()
-                    }
-                }
-            }
-
-        }
-    }
-    
-    func resetGame(){
-        let top_left: BoardCell  = BoardCell(value: .None, node: "//*top_left")
-        let top_middle: BoardCell = BoardCell(value: .None, node: "//*top_middle")
-        let top_right: BoardCell = BoardCell(value: .None, node: "//*top_right")
-        let middle_left: BoardCell = BoardCell(value: .None, node: "//*middle_left")
-        let center: BoardCell = BoardCell(value: .None, node: "//*center")
-        let middle_right: BoardCell = BoardCell(value: .None, node: "//*middle_right")
-        let bottom_left: BoardCell = BoardCell(value: .None, node: "//*bottom_left")
-        let bottom_middle: BoardCell = BoardCell(value: .None, node: "//*bottom_middle")
-        let bottom_right: BoardCell = BoardCell(value: .None, node: "//*bottom_right")
-        
-        boardNode = self.childNodeWithName("//Grid") as? SKSpriteNode
-        
-        winningLabel = self.childNodeWithName("winningLabel")
-        winningLabel.hidden = true
-        
-        resetNode = self.childNodeWithName("Reset")
-        resetNode.hidden = true
-        
-        
-        let board = [top_left, top_middle, top_right, middle_left, center, middle_right, bottom_left, bottom_middle, bottom_right]
-        
-        gameBoard = Board(gameboard: board)
-        
-        self.enumerateChildNodesWithName("//grid*") { (node, stop) in
-            if let node = node as? SKSpriteNode{
-                node.removeAllChildren()
-            }
-        }
+        self.stateMachine.updateWithDeltaTime(currentTime)
     }
 }

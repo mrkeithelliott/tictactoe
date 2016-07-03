@@ -9,6 +9,23 @@
 import GameplayKit
 import Foundation
 
+enum PlayerType: Int{
+    case X
+    case O
+    case None
+}
+
+enum GameState: Int{
+    case Winner
+    case Draw
+    case Playing
+}
+
+struct BoardCell{
+    var value: PlayerType
+    var node: String
+}
+
 @objc(Player)
 class Player: NSObject, GKGameModelPlayer{
     let _player: Int
@@ -39,6 +56,8 @@ class Board: NSObject, NSCopying, GKGameModel{
     private let _players: [GKGameModelPlayer] = [Player(player: 0), Player(player: 1)]
     private var currentPlayer: GKGameModelPlayer?
     private var board: [BoardCell]
+    private var currentScoreForPlayerOne: Int
+    private var currentScoreForPlayerTwo: Int
     
     func isPlayerOne()->Bool{
         return currentPlayer?.playerId == _players[0].playerId
@@ -82,7 +101,7 @@ class Board: NSObject, NSCopying, GKGameModel{
         board[index].value = value
     }
     
-    func isPlayerOne(player: GKGameModelPlayer)->Bool{
+    @objc func isPlayerOne(player: GKGameModelPlayer)->Bool{
         return player.playerId == _players[0].playerId
     }
     
@@ -96,18 +115,25 @@ class Board: NSObject, NSCopying, GKGameModel{
     required override init() {
         self.currentPlayer = _players[0]
         self.board = []
+        self.currentScoreForPlayerOne = 0
+        self.currentScoreForPlayerTwo = 0
+        
         super.init()
     }
     
     init(gameboard: [BoardCell]){
         self.currentPlayer = _players[0]
         self.board = gameboard
+        self.currentScoreForPlayerOne = 0
+        self.currentScoreForPlayerTwo = 0
         super.init()
     }
     
     required init(_ board: Board){
         self.currentPlayer =  board.currentPlayer
         self.board = Array(board.board)
+        self.currentScoreForPlayerOne = 0
+        self.currentScoreForPlayerTwo = 0
         super.init()
     }
     
@@ -141,6 +167,12 @@ class Board: NSObject, NSCopying, GKGameModel{
         return moves
     }
     
+    func unapplyGameModelUpdate(gameModelUpdate: GKGameModelUpdate) {
+        let move = gameModelUpdate as! Move
+        self.board[move.cell].value = .None
+        self.togglePlayer()
+    }
+    
     func applyGameModelUpdate(gameModelUpdate: GKGameModelUpdate) {
         let move = gameModelUpdate as! Move
         self.board[move.cell].value = isPlayerOne() ? .X : .O
@@ -171,7 +203,137 @@ class Board: NSObject, NSCopying, GKGameModel{
     }
     
     func scoreForPlayer(player: GKGameModelPlayer) -> Int {
-        return 0
+        if isWinForPlayer(player){
+            if isPlayerOne(player){
+                currentScoreForPlayerOne += 4
+                return currentScoreForPlayerOne
+            }
+            else{
+                currentScoreForPlayerTwo += 4
+                return currentScoreForPlayerTwo
+            }
+        }
+        
+        if isLossForPlayer(player){
+            return 0
+        }
+        
+        let opponent = isPlayerOne(player) ? playerTwo() : playerOne()
+        
+        let opponentOneMoveAwayFromWinning = isOneMoveAwayFromWinning(opponent)
+        if opponentOneMoveAwayFromWinning{
+            if isPlayerOne(player){
+                currentScoreForPlayerOne += 3
+                return currentScoreForPlayerOne
+            }
+            else{
+                currentScoreForPlayerTwo += 3
+                return currentScoreForPlayerTwo
+            }
+        }
+        
+        let playOneMoveAwayFromWinning = isOneMoveAwayFromWinning(player)
+        if playOneMoveAwayFromWinning{
+            if isPlayerOne(player){
+                currentScoreForPlayerOne += 2
+                return currentScoreForPlayerOne
+            }
+            else{
+                currentScoreForPlayerTwo += 2
+                return currentScoreForPlayerTwo
+            }
+        }
+        
+        if isPlayerOne(player){
+            currentScoreForPlayerOne += 1
+            return currentScoreForPlayerOne
+        }
+        else{
+            currentScoreForPlayerTwo += 1
+            return currentScoreForPlayerTwo
+        }
+    }
+    
+    func isOneMoveAwayFromWinning(player: GKGameModelPlayer)->Bool {
+        
+        let row_diagonal_Checker = {(row:ArraySlice<BoardCell>, playerCell: PlayerType)->Bool in
+            let numofPlayerTypes = row.filter{$0.value == playerCell}
+            let containsBlankCells = row.filter{$0.value == .None}
+        
+            if containsBlankCells.count == 0{
+                return false
+            }
+        
+            if numofPlayerTypes.count == 2 {
+                return true
+            }
+            return false
+        }
+        
+        // check the rows for two in a row
+        let row1 = board[0...2]
+        let playerCell: PlayerType = isPlayerOne(player) ? .X : .O
+        let row2 = board[3...5]
+        let row3 = board[6...8]
+        
+        if row_diagonal_Checker(row1,playerCell){
+            return true
+        }
+        
+        if row_diagonal_Checker(row2, playerCell){
+            return true
+        }
+        
+        if row_diagonal_Checker(row3, playerCell){
+            return true
+        }
+        
+        var col1 = ArraySlice<BoardCell>()
+        col1.append(board[0])
+        col1.append(board[3])
+        col1.append(board[6])
+        
+        if row_diagonal_Checker(col1, playerCell){
+            return true
+        }
+        
+        var col2 = ArraySlice<BoardCell>()
+        col2.append(board[1])
+        col2.append(board[4])
+        col2.append(board[7])
+        
+        if row_diagonal_Checker(col2, playerCell){
+            return true
+        }
+        
+        var col3 = ArraySlice<BoardCell>()
+        col3.append(board[2])
+        col3.append(board[5])
+        col3.append(board[8])
+        
+        if row_diagonal_Checker(col3, playerCell){
+            return true
+        }
+        
+        var diag1 = ArraySlice<BoardCell>()
+        diag1.append(board[0])
+        diag1.append(board[4])
+        diag1.append(board[8])
+        
+        if row_diagonal_Checker(diag1, playerCell){
+            return true
+        }
+        
+        var diag2 = ArraySlice<BoardCell>()
+        diag2.append(board[2])
+        diag2.append(board[4])
+        diag2.append(board[6])
+        
+        if row_diagonal_Checker(diag2, playerCell){
+            return true
+        }
+        
+        return false
     }
     
     func determineIfWinner()->(GameState, GKGameModelPlayer?){
