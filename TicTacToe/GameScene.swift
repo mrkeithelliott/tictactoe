@@ -14,23 +14,23 @@ class GameScene: SKScene {
     var stateMachine: GKStateMachine!
     var ai: GKMinmaxStrategist!
     
-    override func didMoveToView(view: SKView) {
+    override func didMove(to view: SKView) {
         /* Setup your scene here */
-        self.enumerateChildNodesWithName("//grid*") { (node, stop) in
+        self.enumerateChildNodes(withName: "//grid*") { (node, stop) in
             if let node = node as? SKSpriteNode{
-                node.color = UIColor.clearColor()
+                node.color = UIColor.clear
             }
         }
         
-        let top_left: BoardCell  = BoardCell(value: .None, node: "//*top_left")
-        let top_middle: BoardCell = BoardCell(value: .None, node: "//*top_middle")
-        let top_right: BoardCell = BoardCell(value: .None, node: "//*top_right")
-        let middle_left: BoardCell = BoardCell(value: .None, node: "//*middle_left")
-        let center: BoardCell = BoardCell(value: .None, node: "//*center")
-        let middle_right: BoardCell = BoardCell(value: .None, node: "//*middle_right")
-        let bottom_left: BoardCell = BoardCell(value: .None, node: "//*bottom_left")
-        let bottom_middle: BoardCell = BoardCell(value: .None, node: "//*bottom_middle")
-        let bottom_right: BoardCell = BoardCell(value: .None, node: "//*bottom_right")
+        let top_left: BoardCell  = BoardCell(value: .none, node: "//*top_left")
+        let top_middle: BoardCell = BoardCell(value: .none, node: "//*top_middle")
+        let top_right: BoardCell = BoardCell(value: .none, node: "//*top_right")
+        let middle_left: BoardCell = BoardCell(value: .none, node: "//*middle_left")
+        let center: BoardCell = BoardCell(value: .none, node: "//*center")
+        let middle_right: BoardCell = BoardCell(value: .none, node: "//*middle_right")
+        let bottom_left: BoardCell = BoardCell(value: .none, node: "//*bottom_left")
+        let bottom_middle: BoardCell = BoardCell(value: .none, node: "//*bottom_middle")
+        let bottom_right: BoardCell = BoardCell(value: .none, node: "//*bottom_right")
         
         let board = [top_left, top_middle, top_right, middle_left, center, middle_right, bottom_left, bottom_middle, bottom_right]
         
@@ -45,19 +45,19 @@ class GameScene: SKScene {
         let endGameState = EndGameState(scene: self)
         
         stateMachine = GKStateMachine(states: [beginGameState, activeGameState, endGameState])
-        stateMachine.enterState(StartGameState.self)
+        stateMachine.enter(StartGameState.self)
         
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {        
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {        
         for touch in touches {
-            let location = touch.locationInNode(self)
-            let selectedNode = self.nodeAtPoint(location)
+            let location = touch.location(in: self)
+            let selectedNode = self.atPoint(location)
             var node: SKSpriteNode
             
             if let name = selectedNode.name {
                 if name == "Reset" || name == "reset_label"{
-                    self.stateMachine.enterState(StartGameState.self)
+                    self.stateMachine.enter(StartGameState.self)
                     return
                 }
             }
@@ -75,20 +75,20 @@ class GameScene: SKScene {
             }
             
             for i in 0...8{
-                guard let cellNode: SKSpriteNode = self.childNodeWithName(gameBoard.getElementAtBoardLocation(i).node) as? SKSpriteNode else{
+                guard let cellNode: SKSpriteNode = self.childNode(withName: gameBoard.getElementAtBoardLocation(i).node) as? SKSpriteNode else{
                     return
                 }
                 if selectedNode.name == cellNode.name{
                     cellNode.addChild(node)
-                    gameBoard.addPlayerValueAtBoardLocation(i, value: gameBoard.isPlayerOne() ? .X : .O)
+                    gameBoard.addPlayerValueAtBoardLocation(i, value: gameBoard.isPlayerOne() ? .x : .o)
                     gameBoard.togglePlayer()
                 }
             }
         }
     }
    
-    override func update(currentTime: CFTimeInterval) {
+    override func update(_ currentTime: TimeInterval) {
         /* Called before each frame is rendered */
-        self.stateMachine.updateWithDeltaTime(currentTime)
+        self.stateMachine.update(deltaTime: currentTime)
     }
 }
