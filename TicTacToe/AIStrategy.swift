@@ -53,6 +53,7 @@ class Move: NSObject, GKGameModelUpdate{
 
 @objc(Board)
 class Board: NSObject, NSCopying, GKGameModel{
+    
     private let _players: [GKGameModelPlayer] = [Player(player: 0), Player(player: 1)]
     private var currentPlayer: GKGameModelPlayer?
     private var board: [BoardCell]
@@ -76,7 +77,7 @@ class Board: NSObject, NSCopying, GKGameModel{
     }
     
     func isPlayerOneTurn()->Bool{
-        return isPlayerOne(activePlayer!)
+        return isPlayerOne(player: activePlayer!)
     }
     
     func isPlayerTwoTurn()->Bool{
@@ -106,7 +107,7 @@ class Board: NSObject, NSCopying, GKGameModel{
     }
     
     
-    @objc func copyWithZone(zone: NSZone) -> AnyObject{
+    @objc func copy(with zone: NSZone? = nil) -> Any{
         let copy = Board()
         copy.setGameModel(self)
         return copy
@@ -149,16 +150,16 @@ class Board: NSObject, NSCopying, GKGameModel{
         currentPlayer = currentPlayer?.playerId == _players[0].playerId ? _players[1] : _players[0]
     }
     
-    func setGameModel(gameModel: GKGameModel) {
+    func setGameModel(_ gameModel: GKGameModel) {
         if let board = gameModel as? Board{
             self.currentPlayer = board.currentPlayer
             self.board = Array(board.board)
         }
     }
     
-    func gameModelUpdatesForPlayer(player: GKGameModelPlayer) -> [GKGameModelUpdate]? {
+    func gameModelUpdates(for player: GKGameModelPlayer) -> [GKGameModelUpdate]? {
         var moves:[GKGameModelUpdate] = []
-        for (index, _) in self.board.enumerate(){
+        for (index, _) in self.board.enumerated(){
             if self.board[index].value == .None{
                 moves.append(Move(cell: index))
             }
@@ -167,13 +168,13 @@ class Board: NSObject, NSCopying, GKGameModel{
         return moves
     }
     
-    func unapplyGameModelUpdate(gameModelUpdate: GKGameModelUpdate) {
+    func unapplyGameModelUpdate(_ gameModelUpdate: GKGameModelUpdate) {
         let move = gameModelUpdate as! Move
         self.board[move.cell].value = .None
         self.togglePlayer()
     }
     
-    func applyGameModelUpdate(gameModelUpdate: GKGameModelUpdate) {
+    func apply(_ gameModelUpdate: GKGameModelUpdate) {
         let move = gameModelUpdate as! Move
         self.board[move.cell].value = isPlayerOne() ? .X : .O
         self.togglePlayer()
@@ -184,7 +185,7 @@ class Board: NSObject, NSCopying, GKGameModel{
         return gridCoord.value == .X ? self.players?.first: self.players?.last
     }
     
-    func isWinForPlayer(player: GKGameModelPlayer) -> Bool {
+    func isWin(player: GKGameModelPlayer) -> Bool {
         let (state, winner) = determineIfWinner()
         if state == .Winner && winner?.playerId == player.playerId{
             return true
@@ -193,7 +194,7 @@ class Board: NSObject, NSCopying, GKGameModel{
         return false
     }
     
-    func isLossForPlayer(player: GKGameModelPlayer) -> Bool {
+    func isLoss(player: GKGameModelPlayer) -> Bool {
         let (state, winner) = determineIfWinner()
         if state == .Winner && winner?.playerId != player.playerId{
             return true
@@ -202,9 +203,10 @@ class Board: NSObject, NSCopying, GKGameModel{
         return false
     }
     
-    func scoreForPlayer(player: GKGameModelPlayer) -> Int {
-        if isWinForPlayer(player){
-            if isPlayerOne(player){
+    
+    func score(for player: GKGameModelPlayer) -> Int {
+        if isWin(player: player){
+            if isPlayerOne(player: player){
                 currentScoreForPlayerOne += 4
                 return currentScoreForPlayerOne
             }
@@ -214,15 +216,15 @@ class Board: NSObject, NSCopying, GKGameModel{
             }
         }
         
-        if isLossForPlayer(player){
+        if isLoss(player: player){
             return 0
         }
         
-        let opponent = isPlayerOne(player) ? playerTwo() : playerOne()
+        let opponent = isPlayerOne(player: player) ? playerTwo() : playerOne()
         
-        let opponentOneMoveAwayFromWinning = isOneMoveAwayFromWinning(opponent)
+        let opponentOneMoveAwayFromWinning = isOneMoveAwayFromWinning(player: opponent)
         if opponentOneMoveAwayFromWinning{
-            if isPlayerOne(player){
+            if isPlayerOne(player: player){
                 currentScoreForPlayerOne += 3
                 return currentScoreForPlayerOne
             }
@@ -232,9 +234,9 @@ class Board: NSObject, NSCopying, GKGameModel{
             }
         }
         
-        let playOneMoveAwayFromWinning = isOneMoveAwayFromWinning(player)
+        let playOneMoveAwayFromWinning = isOneMoveAwayFromWinning(player: player)
         if playOneMoveAwayFromWinning{
-            if isPlayerOne(player){
+            if isPlayerOne(player: player){
                 currentScoreForPlayerOne += 2
                 return currentScoreForPlayerOne
             }
@@ -244,7 +246,7 @@ class Board: NSObject, NSCopying, GKGameModel{
             }
         }
         
-        if isPlayerOne(player){
+        if isPlayerOne(player: player){
             currentScoreForPlayerOne += 1
             return currentScoreForPlayerOne
         }
@@ -272,7 +274,7 @@ class Board: NSObject, NSCopying, GKGameModel{
         
         // check the rows for two in a row
         let row1 = board[0...2]
-        let playerCell: PlayerType = isPlayerOne(player) ? .X : .O
+        let playerCell: PlayerType = isPlayerOne(player: player) ? .X : .O
         let row2 = board[3...5]
         let row3 = board[6...8]
         
@@ -339,44 +341,44 @@ class Board: NSObject, NSCopying, GKGameModel{
     func determineIfWinner()->(GameState, GKGameModelPlayer?){
         // check rows for a winner
         if board[0].value != .None && (board[0].value == board[1].value && board[0].value == board[2].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[0]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(gridCoord: board[0]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[3].value != .None && (board[3].value == board[4].value && board[3].value == board[5].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[3]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(gridCoord: board[3]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[6].value != .None && (board[6].value == board[7].value && board[6].value == board[8].value) {
-            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[6]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(gridCoord: board[6]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         // check columns for a winner
         if board[0].value != .None && (board[0].value == board[3].value && board[3].value == board[6].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[0]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(gridCoord: board[0]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[1].value != .None && (board[1].value == board[4].value && board[4].value == board[7].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[1]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(gridCoord: board[1]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[2].value != .None && (board[2].value == board[5].value && board[5].value == board[8].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[2]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(gridCoord: board[2]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         // check diagonals for a winner
         if board[0].value != .None && (board[0].value == board[4].value && board[4].value == board[8].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[0]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(gridCoord: board[0]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         
         if board[2].value != .None && (board[2].value == board[4].value && board[4].value == board[6].value){
-            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(board[2]) else{ return (.Draw, nil)}
+            guard let winner: GKGameModelPlayer = getPlayerAtBoardCell(gridCoord: board[2]) else{ return (.Draw, nil)}
             return (.Winner, winner)
         }
         

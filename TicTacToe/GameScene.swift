@@ -14,11 +14,11 @@ class GameScene: SKScene {
     var stateMachine: GKStateMachine!
     var ai: GKMinmaxStrategist!
     
-    override func didMoveToView(view: SKView) {
+    override func didMove(to view: SKView) {
         /* Setup your scene here */
-        self.enumerateChildNodesWithName("//grid*") { (node, stop) in
+        self.enumerateChildNodes(withName: "//grid*") { (node, stop) in
             if let node = node as? SKSpriteNode{
-                node.color = UIColor.clearColor()
+                node.color = UIColor.clear
             }
         }
         
@@ -45,19 +45,19 @@ class GameScene: SKScene {
         let endGameState = EndGameState(scene: self)
         
         stateMachine = GKStateMachine(states: [beginGameState, activeGameState, endGameState])
-        stateMachine.enterState(StartGameState.self)
+        stateMachine.enter(StartGameState.self)
         
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {        
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            let location = touch.locationInNode(self)
-            let selectedNode = self.nodeAtPoint(location)
+            let location = touch.location(in: self)
+            let selectedNode = self.atPoint(location)
             var node: SKSpriteNode
             
             if let name = selectedNode.name {
                 if name == "Reset" || name == "reset_label"{
-                    self.stateMachine.enterState(StartGameState.self)
+                    self.stateMachine.enter(StartGameState.self)
                     return
                 }
             }
@@ -65,7 +65,7 @@ class GameScene: SKScene {
             if gameBoard.isPlayerOne(){
                 let cross = SKSpriteNode(imageNamed: "X_symbol")
                 cross.size = CGSize(width: 75, height: 75)
-                cross.zRotation = CGFloat(M_PI / 4.0)
+                cross.zRotation = CGFloat(Double.pi / 4.0)
                 node = cross
             }
             else{
@@ -75,20 +75,20 @@ class GameScene: SKScene {
             }
             
             for i in 0...8{
-                guard let cellNode: SKSpriteNode = self.childNodeWithName(gameBoard.getElementAtBoardLocation(i).node) as? SKSpriteNode else{
+                guard let cellNode: SKSpriteNode = self.childNode(withName: gameBoard.getElementAtBoardLocation(index: i).node) as? SKSpriteNode else{
                     return
                 }
                 if selectedNode.name == cellNode.name{
                     cellNode.addChild(node)
-                    gameBoard.addPlayerValueAtBoardLocation(i, value: gameBoard.isPlayerOne() ? .X : .O)
+                    gameBoard.addPlayerValueAtBoardLocation(index: i, value: gameBoard.isPlayerOne() ? .X : .O)
                     gameBoard.togglePlayer()
                 }
             }
         }
     }
    
-    override func update(currentTime: CFTimeInterval) {
+    override func update(_ currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
-        self.stateMachine.updateWithDeltaTime(currentTime)
+        self.stateMachine.update(deltaTime: currentTime)
     }
 }
